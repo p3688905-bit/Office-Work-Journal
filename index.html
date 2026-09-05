@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>某區辦公室白領的工作日誌 — Galgame</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-tc/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-tc/900.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-tc/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-tc/700.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Noto Sans TC',sans-serif;}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform:translate(-50%,-50%);background:#111;overflow:hidden;cursor:pointer;box-shadow:0 0 60px rgba(0,0,0,.8);}
+.bgimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s ease;}
+.bgimg.on{opacity:1;}
+.bgimg.dim{filter:brightness(.55) saturate(.85);}
+#chars{position:absolute;inset:0;pointer-events:none;}
+.char{position:absolute;bottom:-14px;transform:translateX(-50%);opacity:0;transition:left .45s cubic-bezier(.22,.9,.36,1),opacity .3s ease,filter .3s ease;will-change:transform,opacity;}
+.char.in{opacity:1;}
+.char.out{opacity:0 !important;}
+.char.dimmed{filter:brightness(.5) saturate(.75);}
+.char img{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:660px;animation:bob 7s ease-in-out infinite;filter:drop-shadow(0 6px 14px rgba(0,0,0,.35));}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-6px)}}
+#vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.35) 100%);}
+#dialog{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);width:1150px;min-height:172px;border-radius:14px;
+ background:linear-gradient(180deg,rgba(24,20,38,.82),rgba(16,14,30,.9));border:1px solid rgba(255,182,213,.45);
+ box-shadow:0 8px 30px rgba(0,0,0,.55), inset 0 0 40px rgba(255,182,213,.06);backdrop-filter:blur(6px);
+ padding:30px 44px 26px;display:none;}
+#dialog.on{display:block;}
+#nameplate{position:absolute;top:-24px;left:34px;padding:6px 26px;border-radius:8px 8px 8px 0;font-family:'Noto Serif TC',serif;font-weight:700;font-size:21px;letter-spacing:3px;color:#fff;background:linear-gradient(135deg,#e2688f,#8f5bd9);box-shadow:0 4px 12px rgba(0,0,0,.4);display:none;}
+#nameplate.on{display:block;}
+#text{color:#f5f2ff;font-size:25px;line-height:1.85;letter-spacing:1px;font-family:'Noto Serif TC',serif;font-weight:700;text-shadow:0 2px 6px rgba(0,0,0,.6);min-height:92px;}
+#text.narr{color:#cfc8e8;font-style:italic;}
+#nextind{position:absolute;right:26px;bottom:12px;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:13px solid #ffb6d5;animation:blink 1s infinite;display:none;}
+#nextind.on{display:block;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+#hud{position:absolute;top:14px;left:0;right:0;display:none;justify-content:space-between;align-items:center;padding:0 20px;pointer-events:none;}
+#hud.on{display:flex;}
+#chaplabel{font-size:15px;letter-spacing:2px;color:rgba(255,255,255,.85);background:rgba(20,16,40,.55);border:1px solid rgba(255,182,213,.35);padding:6px 16px;border-radius:20px;backdrop-filter:blur(4px);}
+#hudbtns{display:flex;gap:8px;pointer-events:auto;}
+.hbtn{font-family:'Noto Sans TC',sans-serif;font-size:14px;letter-spacing:1px;color:#ffe3ef;background:rgba(30,22,52,.6);border:1px solid rgba(255,182,213,.4);padding:6px 14px;border-radius:18px;cursor:pointer;backdrop-filter:blur(4px);transition:.2s;}
+.hbtn:hover{background:rgba(226,104,143,.55);}
+.hbtn.act{background:#e2688f;color:#fff;}
+#hearts{font-size:15px;color:#ffb6d5;background:rgba(20,16,40,.55);border:1px solid rgba(255,182,213,.35);padding:6px 14px;border-radius:20px;letter-spacing:2px;}
+#card{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(8,6,16,.78);backdrop-filter:blur(3px);z-index:30;}
+#card.on{display:flex;animation:cardin 2.4s ease both;}
+@keyframes cardin{0%{opacity:0}18%{opacity:1}80%{opacity:1}100%{opacity:0}}
+#cardDate{font-family:'Noto Serif TC',serif;font-weight:900;font-size:74px;color:#ffd7e6;letter-spacing:14px;text-shadow:0 0 30px rgba(255,150,190,.5);}
+#cardSub{margin-top:18px;font-family:'Noto Serif TC',serif;font-size:30px;color:#cfc4f0;letter-spacing:8px;}
+#cardLine{width:340px;height:1px;background:linear-gradient(90deg,transparent,#ffb6d5,transparent);margin-top:26px;}
+#choiceBox{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:40;background:rgba(0,0,0,.25);}
+#choiceBox.on{display:flex;}
+.chopt{width:640px;padding:16px 30px;text-align:center;font-family:'Noto Serif TC',serif;font-weight:700;font-size:22px;letter-spacing:2px;color:#fff;background:linear-gradient(90deg,rgba(143,91,217,.85),rgba(226,104,143,.85));border:1px solid rgba(255,255,255,.5);border-radius:12px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.4);transition:.2s;animation:optin .4s ease both;}
+.chopt:hover{transform:scale(1.05);box-shadow:0 0 26px rgba(255,150,190,.6);}
+@keyframes optin{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+#title{position:absolute;inset:0;z-index:60;background:#000;}
+#title .art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.8);}
+#title .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,8,20,.15) 0%,rgba(10,8,20,.55) 60%,rgba(10,8,20,.9) 100%);}
+#titleTxt{position:absolute;top:64px;left:0;right:0;text-align:center;}
+#titleTxt h1{font-family:'Noto Serif TC',serif;font-weight:900;font-size:58px;letter-spacing:10px;color:#fff;text-shadow:0 0 34px rgba(255,150,190,.75),0 3px 8px rgba(0,0,0,.7);}
+#titleTxt .sub{margin-top:14px;font-size:19px;letter-spacing:6px;color:#ffd7e6;text-shadow:0 2px 6px #000;}
+#titleTxt .jp{margin-top:6px;font-size:14px;letter-spacing:4px;color:rgba(255,255,255,.65);}
+#titleBtns{position:absolute;bottom:96px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:16px;}
+.tbtn{width:300px;padding:13px 0;text-align:center;font-family:'Noto Serif TC',serif;font-weight:700;font-size:22px;letter-spacing:6px;color:#fff;background:linear-gradient(90deg,rgba(226,104,143,.9),rgba(143,91,217,.9));border:1px solid rgba(255,255,255,.55);border-radius:30px;cursor:pointer;box-shadow:0 6px 22px rgba(0,0,0,.5);transition:.25s;}
+.tbtn:hover{transform:scale(1.06);box-shadow:0 0 30px rgba(255,150,190,.7);}
+.tbtn.dis{opacity:.4;pointer-events:none;}
+#loadinfo{font-size:14px;color:#ffd7e6;letter-spacing:2px;}
+#soundhint{position:absolute;bottom:56px;left:0;right:0;text-align:center;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,.6);}
+#prog{position:absolute;bottom:26px;left:0;right:0;text-align:center;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,.75);}
+#end{position:absolute;inset:0;z-index:70;display:none;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(ellipse at center,rgba(40,26,66,.96),rgba(6,4,14,.98));}
+#end.on{display:flex;}
+#endFin{font-family:'Noto Serif TC',serif;font-weight:900;font-size:64px;letter-spacing:20px;color:#ffd7e6;text-shadow:0 0 40px rgba(255,150,190,.6);}
+#endTitle{margin-top:26px;font-family:'Noto Serif TC',serif;font-size:28px;letter-spacing:6px;color:#fff;}
+#endLine{margin-top:16px;font-size:20px;letter-spacing:3px;color:#cfc4f0;}
+#endHeart{margin-top:22px;font-size:17px;letter-spacing:3px;color:#ffb6d5;}
+#endBtns{margin-top:44px;display:flex;gap:20px;}
+#logModal{position:absolute;inset:0;z-index:80;display:none;background:rgba(6,4,14,.92);backdrop-filter:blur(4px);}
+#logModal.on{display:block;}
+#logHead{padding:26px 60px 10px;font-family:'Noto Serif TC',serif;font-size:26px;letter-spacing:6px;color:#ffd7e6;}
+#logList{position:absolute;top:76px;bottom:70px;left:60px;right:60px;overflow-y:auto;padding:10px 20px;}
+#logList::-webkit-scrollbar{width:8px;}#logList::-webkit-scrollbar-thumb{background:#8f5bd9;border-radius:4px;}
+.logrow{margin-bottom:16px;font-size:19px;line-height:1.7;color:#e8e3f7;}
+.logrow b{color:#ffb6d5;margin-right:10px;letter-spacing:2px;}
+#logClose{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);}
+#toast{position:absolute;top:70px;left:50%;transform:translateX(-50%);padding:10px 30px;border-radius:24px;background:rgba(226,104,143,.92);color:#fff;font-size:17px;letter-spacing:3px;display:none;z-index:90;box-shadow:0 6px 20px rgba(0,0,0,.5);}
+#toast.on{display:block;animation:optin .3s ease both;}
+</style>
+</head>
+<body>
+<div id="stage">
+  <img id="bgA" class="bgimg" alt="">
+  <img id="bgB" class="bgimg" alt="">
+  <div id="chars"></div>
+  <div id="vignette"></div>
+  <div id="hud">
+    <span id="chaplabel">序章</span>
+    <span id="hearts">士氣 ♥♥♥</span>
+    <div id="hudbtns">
+      <button class="hbtn" id="bLog">紀錄</button>
+      <button class="hbtn" id="bSkip">快進</button>
+      <button class="hbtn" id="bAuto">自動</button>
+      <button class="hbtn" id="bSave">儲存</button>
+      <button class="hbtn" id="bLoad">讀取</button>
+      <button class="hbtn" id="bMus">♪</button>
+    </div>
+  </div>
+  <div id="dialog"><div id="nameplate"></div><div id="text"></div><div id="nextind"></div></div>
+  <div id="card"><div id="cardDate"></div><div id="cardLine"></div><div id="cardSub"></div></div>
+  <div id="choiceBox"></div>
+  <div id="title">
+    <img class="art" id="titleArt" alt="">
+    <div class="shade"></div>
+    <div id="titleTxt">
+      <h1>某區辦公室白領的工作日誌</h1>
+      <div class="sub">～ 粉紅日誌與空白城市 ～</div>
+      <div class="jp">とあるオフィス白領の業務日誌 ・ Visual Novel</div>
+    </div>
+    <div id="titleBtns">
+      <button class="tbtn dis" id="bStart">開始閱讀日誌</button>
+      <button class="tbtn dis" id="bLoad2">讀取進度</button>
+      <div id="loadinfo"></div>
+    </div>
+    <div id="soundhint">🎧 建議配戴耳機・點擊畫面後啟用配樂</div>
+    <div id="prog">資源載入中… 0%</div>
+  </div>
+  <div id="end">
+    <div id="endFin">—— FIN ——</div>
+    <div id="endTitle"></div>
+    <div id="endLine"></div>
+    <div id="endHeart"></div>
+    <div id="endBtns">
+      <button class="tbtn" id="bAgain" style="width:220px;font-size:19px;">重新開始</button>
+      <button class="tbtn" id="bTitle" style="width:220px;font-size:19px;">回到標題</button>
+    </div>
+  </div>
+  <div id="logModal">
+    <div id="logHead">—— 對話紀錄 ——</div>
+    <div id="logList"></div>
+    <button class="tbtn" id="logClose" style="width:200px;font-size:18px;">關閉</button>
+  </div>
+  <div id="toast"></div>
+</div>
+<script>
+/* ================= 資源 ================= */
+const BASE='https://image.qwenlm.ai/public_source/3aa9c89e-1f81-4c43-8790-805a13afd918/';
+const BG={
+ title:BASE+'1ce728751-7887-46ce-807f-afcf90ca2571.png',
+ office:BASE+'1c0227428-0e84-4e8b-a62e-b027c94e303a.png',
+ cafe:BASE+'1e289a03f-a42c-44d9-9410-8ec9b3c9e55f.png',
+ yoga:BASE+'1a757a0e6-af03-4e29-822f-4325e7b54919.png',
+ home:BASE+'15a3f9d77-dce7-49e4-9c9a-b12948a93c81.png',
+ city:BASE+'1b971da24-51e7-4c8c-8f25-63884b6b3f.png',
+ mountain:BASE+'1afee45ba-5c17-4f67-adbc-d4d9b339ee09.png',
+ mofa:BASE+'1c74caffc-f6a1-41e7-bbd9-2dfe839cbc5a.png',
+ supermarket:BASE+'116b4bece-cc97-46fd-81b7-13ba16534c68.png',
+ party:BASE+'1ac373314-7f97-40a9-9327-d4b2261db7a5.png',
+ nightclub:BASE+'17a16a1f2-6d04-4324-8205-2bcd32b4bee9.png',
+ airport:BASE+'1d37f7040-a644-4942-a59a-0ba213aefb53.png',
+ restaurant:BASE+'1ba4b6955-fab5-490e-8cfe-b00fc6ae5ccd.png'
+};
+const SPR={
+ xiaolin:BASE+'1bc191a19-4baa-4308-b669-25be9d451a45.png',
+ xiaolin_w:BASE+'13682f20d-c80d-46eb-9bc2-7f555803757a.png',
+ xiaolin_h:BASE+'118824cd5-bedf-41c7-a356-e24a777a103b.png',
+ boss:BASE+'181a8ef64-d857-4c0a-b583-2b24e8fafad7.png',
+ chen:BASE+'146966bdb-e5a4-42b7-9a24-771c55bf00c7.png',
+ missA:BASE+'18ca08625-a565-4379-b80f-a7570d0c52d9.png',
+ wu:BASE+'1c462a9b0-fe21-43f7-aef3-d740e4571215.png',
+ stamp:BASE+'115fc8181-873a-4f0f-bd4b-37c22e3ce5f5.png',
+ cleaner:BASE+'1105702a6-60f4-4e64-8be9-c90b67a477b3.png',
+ writer:BASE+'145359e50-97e1-41db-9756-e25a2eb19d1e.png',
+ secretary:BASE+'1c405d567-5b15-4299-9ce7-cfad0550b821.png',
+ dowager:BASE+'1ee335425-bfcb-4560-acb1-7588160d2ac4.png',
+ sis:BASE+'1380c84fd-b775-42f4-8530-baa7fca40964.png',
+ ji:BASE+'1999e3a82-1e8a-49b4-8f27-886f10370d9b.png',
+ junior:BASE+'1a4e42798-9225-4a29-be05-2190202d0fbe.png',
+ seniorF:BASE+'1a51eb1f6-d176-419c-8eb3-ec4b4855e146.png'
+};
+const CH={
+ xiaolin:{name:'小林',color:'linear-gradient(135deg,#e2688f,#f2a0bc)'},
+ xiaolin_w:{name:'小林',color:'linear-gradient(135deg,#e2688f,#f2a0bc)'},
+ xiaolin_h:{name:'小林',color:'linear-gradient(135deg,#e2688f,#f2a0bc)'},
+ boss:{name:'Boss',color:'linear-gradient(135deg,#b8860b,#e6b422)'},
+ chen:{name:'陳責編',color:'linear-gradient(135deg,#2a9d8f,#7fd1c0)'},
+ missA:{name:'A小姐',color:'linear-gradient(135deg,#6a3ab2,#b58ae6)'},
+ wu:{name:'吳企編',color:'linear-gradient(135deg,#5a8f4f,#9ccc8f)'},
+ stamp:{name:'印章男孩',color:'linear-gradient(135deg,#d95d39,#ff9d76)'},
+ cleaner:{name:'清潔小弟',color:'linear-gradient(135deg,#3a7bd5,#8fc3ff)'},
+ writer:{name:'作家',color:'linear-gradient(135deg,#6d4c41,#c8a97a)'},
+ secretary:{name:'小秘書',color:'linear-gradient(135deg,#5c6bc0,#9fa8da)'},
+ dowager:{name:'皇太后',color:'linear-gradient(135deg,#8e24aa,#ffd54f)'},
+ sis:{name:'乾姊姊',color:'linear-gradient(135deg,#f57c00,#ffb74d)'},
+ ji:{name:'紀伯伯',color:'linear-gradient(135deg,#795548,#bcaaa4)'},
+ junior:{name:'小後輩',color:'linear-gradient(135deg,#00838f,#4dd0e1)'},
+ seniorF:{name:'前輩',color:'linear-gradient(135deg,#ad1457,#f48fb1)'}
+};
+const POS={left:'25%',center:'50%',right:'75%'};
+const EXPR={xiaolin:'L',xiaolin_w:'L',xiaolin_h:'L'};
+const groupOf=id=>EXPR[id]||id;
+function loadImg(u){return new Promise((res,rej)=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>res(i);i.onerror=rej;i.src=u;});}
+/* ================================================================
+   立繪去背引擎（半透明修正版）
+   問題根源：舊版的「局部連續性擴散」規則會沿著相近色滲入
+   淺色衣物（清潔小弟的白色防護衣、吳企編的淺色襯衫），
+   造成大面積被誤判為背景而呈現半透明。
+   修正：
+   1) 區域擴散只接受「與邊界背景色模型足夠接近」的像素，
+      完全移除局部連續性規則 → 不再滲入角色本體。
+   2) 羽化僅限 1 像素邊緣帶，且 alpha 下限 130 → 主體恆不透明。
+   3) 去除比例異常時自動重試（過少→放寬、過多→收緊）。
+   4) 清潔小弟、吳企編改採天藍底新版立繪，對比更明確。
+   ================================================================ */
+function keyOnce(img,TOL){
+ const w=img.naturalWidth,h=img.naturalHeight;
+ const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+ const cx=cv.getContext('2d',{willReadFrequently:true});
+ cx.drawImage(img,0,0);
+ let id;try{id=cx.getImageData(0,0,w,h);}catch(e){return null;}
+ const p=id.data;
+ /* 已是透明圖 → 直接回傳 */
+ let trB=0,ttB=0;
+ const chk=(x,y)=>{ttB++;if(p[(y*w+x)*4+3]<25)trB++;};
+ for(let x=0;x<w;x+=3){chk(x,0);chk(x,h-1);}
+ for(let y=0;y<h;y+=3){chk(0,y);chk(w-1,y);}
+ if(ttB&&trB/ttB>0.6)return{url:cv.toDataURL(),removed:1};
+ /* 邊界色彩聚類 → 背景色模型 */
+ const bins={};let bN=0;
+ const addB=(x,y)=>{const i=(y*w+x)*4;if(p[i+3]<120)return;bN++;
+  const k=(p[i]>>4)+'_'+(p[i+1]>>4)+'_'+(p[i+2]>>4);
+  const b=(bins[k]=bins[k]||{s:[0,0,0],n:0});b.s[0]+=p[i];b.s[1]+=p[i+1];b.s[2]+=p[i+2];b.n++;};
+ for(let x=0;x<w;x++){addB(x,0);addB(x,1);addB(x,h-1);addB(x,h-2);}
+ for(let y=0;y<h;y++){addB(0,y);addB(1,y);addB(w-1,y);addB(w-2,y);}
+ const centers=Object.values(bins).filter(b=>b.n>bN*0.02).map(b=>[b.s[0]/b.n,b.s[1]/b.n,b.s[2]/b.n]);
+ if(!centers.length)centers.push([255,255,255]);
+ const distC=(r,g,b)=>{let m=1e9;for(const c of centers){const d=Math.abs(r-c[0])+Math.abs(g-c[1])+Math.abs(b-c[2]);if(d<m)m=d;}return m;};
+ /* 區域擴散：僅接受接近背景模型的像素（無局部連續性規則） */
+ const bgMask=new Uint8Array(w*h);
+ const qx=new Int32Array(w*h),qy=new Int32Array(w*h);let head=0,tail=0;
+ const tryAdd=(x,y)=>{
+  if(x<0||y<0||x>=w||y>=h)return;const q=y*w+x;if(bgMask[q])return;
+  const i=q*4;
+  if(distC(p[i],p[i+1],p[i+2])<TOL){bgMask[q]=1;qx[tail]=x;qy[tail]=y;tail++;}
+ };
+ for(let x=0;x<w;x++){tryAdd(x,0);tryAdd(x,h-1);}
+ for(let y=0;y<h;y++){tryAdd(0,y);tryAdd(w-1,y);}
+ while(head<tail){
+  const x=qx[head],y=qy[head];head++;
+  tryAdd(x+1,y);tryAdd(x-1,y);tryAdd(x,y+1);tryAdd(x,y-1);
+ }
+ /* 只保留與圖片邊緣連通的背景（填補內部誤判破洞） */
+ const keep=new Uint8Array(w*h);
+ const qk=new Int32Array(w*h);let kh=0,kt=0;
+ const seed=(x,y)=>{const q=y*w+x;if(bgMask[q]&&!keep[q]){keep[q]=1;qk[kt++]=q;}};
+ for(let x=0;x<w;x++){seed(x,0);seed(x,h-1);}
+ for(let y=0;y<h;y++){seed(0,y);seed(w-1,y);}
+ while(kh<kt){
+  const q=qk[kh++],x=q%w,y=(q/w)|0;
+  if(x>0&&bgMask[q-1]&&!keep[q-1]){keep[q-1]=1;qk[kt++]=q-1;}
+  if(x<w-1&&bgMask[q+1]&&!keep[q+1]){keep[q+1]=1;qk[kt++]=q+1;}
+  if(y>0&&bgMask[q-w]&&!keep[q-w]){keep[q-w]=1;qk[kt++]=q-w;}
+  if(y<h-1&&bgMask[q+w]&&!keep[q+w]){keep[q+w]=1;qk[kt++]=q+w;}
+ }
+ let removed=0;for(let q=0;q<w*h;q++)if(keep[q])removed++;
+ removed/=(w*h);
+ /* 輕度羽化：僅 1 像素邊緣帶，alpha 下限 130 → 主體不透明 */
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+  const q=y*w+x;if(keep[q])continue;
+  let near=false;
+  if(x>0&&keep[q-1])near=true;
+  else if(x<w-1&&keep[q+1])near=true;
+  else if(y>0&&keep[q-w])near=true;
+  else if(y<h-1&&keep[q+w])near=true;
+  else if(x>0&&y>0&&keep[q-w-1])near=true;
+  else if(x<w-1&&y>0&&keep[q-w+1])near=true;
+  else if(x>0&&y<h-1&&keep[q+w-1])near=true;
+  else if(x<w-1&&y<h-1&&keep[q+w+1])near=true;
+  if(!near)continue;
+  const i=q*4,dc=distC(p[i],p[i+1],p[i+2]);
+  const a=Math.max(130,Math.min(255,Math.round((dc-TOL)*255/60)+150));
+  p[i+3]=Math.min(p[i+3],a);
+ }
+ for(let q=0;q<w*h;q++)if(keep[q])p[q*4+3]=0;
+ cx.putImageData(id,0,0);
+ return{url:cv.toDataURL(),removed};
+}
+function processSprite(img){
+ try{
+  let r=keyOnce(img,80);
+  if(!r)return null;
+  if(r.removed<0.02){const r2=keyOnce(img,110);if(r2&&r2.removed>r.removed)r=r2;}
+  else if(r.removed>0.7){const r2=keyOnce(img,50);if(r2&&r2.removed>0.02&&r2.removed<r.removed)r=r2;}
+  return r.url;
+ }catch(e){return null;}
+}
+/* ---------- AI 去背漸進升級 ---------- */
+let imglyMod=null,imglyFailed=false;
+async function tryImgly(){
+ if(imglyFailed)return null;
+ if(imglyMod)return imglyMod;
+ try{
+  const mod=await Promise.race([
+   import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/index.mjs'),
+   new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),15000))
+  ]);
+  imglyMod=mod;return mod;
+ }catch(e){imglyFailed=true;return null;}
+}
+async function aiUpgrade(){
+ const mod=await tryImgly();
+ if(!mod)return;
+ let ok=0;
+ for(const k of Object.keys(SPR)){
+  try{
+   const blob=await mod.removeBackground(SPR[k],{output:{format:'image/png'}});
+   const ou=URL.createObjectURL(blob);
+   const im=await loadImg(ou);URL.revokeObjectURL(ou);
+   const cv=document.createElement('canvas');cv.width=im.naturalWidth;cv.height=im.naturalHeight;
+   cv.getContext('2d').drawImage(im,0,0);
+   const old=SPRITE_DATA[k];SPRITE_DATA[k]=cv.toDataURL('image/png');
+   document.querySelectorAll('#chars img').forEach(el=>{if(el.src===old)el.src=SPRITE_DATA[k];});
+   ok++;
+  }catch(e){}
+ }
+ if(ok>0)toast('AI 去背增強完成 ✓');
+}
+/* ================= 配樂引擎 (Web Audio) ================= */
+const MUSIC={};
+(function(){
+ const N=(b,m,d,v,i)=>({b,m,d,v,i});
+ const t=[];
+ [[0,88,1,.9],[1,84,1,.8],[2,81,2,.9],[4,86,1,.8],[5,88,1,.8],[6,91,2,.85],[8,88,1,.8],[9,86,1,.75],[10,84,2,.85],[12,83,1,.7],[13,84,1,.7],[14,81,2,.9]].forEach(a=>t.push(N(a[0],a[1],a[2],a[3],'box')));
+ [[0,45,4,.5],[4,41,4,.45],[8,48,4,.45],[12,40,4,.5]].forEach(a=>t.push(N(a[0],a[1],a[2],a[3],'bass')));
+ MUSIC.title={bpm:72,beats:16,events:t};
+ const o=[];
+ [[0,76,.75],[0.75,79,.25],[1,84,1],[2,79,.5],[2.5,81,.5],[3,76,1],[4,77,.75],[4.75,79,.25],[5,81,1],[6,79,.5],[6.5,77,.5],[7,76,1],[8,84,.5],[8.5,83,.5],[9,81,.5],[9.5,79,.5],[10,77,1],[11,79,1],[12,81,.5],[12.5,84,.5],[13,79,1],[14,76,2]].forEach(a=>o.push(N(a[0],a[1],a[2],.42,'lead')));
+ [48,50,52,55,53,52,50,48,45,47,48,50,52,50,48,43].forEach((m,i)=>o.push(N(i,m,.9,.5,'bass')));
+ for(let i=0;i<16;i++)o.push(N(i+.5,0,.2,.14,'hat'));
+ MUSIC.office={bpm:116,beats:16,events:o};
+ const g=[];
+ [[0,[50,53,57],4],[4,[46,50,58],4],[8,[55,58,62],4],[12,[52,56,59],4]].forEach(a=>g.push(N(a[0],a[1],a[2],.12,'pad')));
+ g.push(N(0,38,8,.5,'bass'));g.push(N(8,33,8,.45,'bass'));
+ for(let i=0;i<16;i+=2)g.push(N(i,0,.3,.4,'kick'));
+ [[2,69,1],[3,65,.5],[3.5,64,.5],[4,62,2],[8,69,1],[9,70,1],[10,69,1],[12,65,2],[14,64,2]].forEach(a=>g.push(N(a[0],a[1],a[2],.4,'lead')));
+ MUSIC.tense={bpm:92,beats:16,events:g};
+ const e=[];
+ [[0,41,4],[4,46,4],[8,48,4],[12,41,4]].forEach(a=>e.push(N(a[0],a[1],a[2],.5,'bass')));
+ [[0,[53,57,60],4],[4,[58,62,65],4],[8,[60,64,67],4],[12,[53,57,60],4]].forEach(a=>e.push(N(a[0],a[1],a[2],.1,'pad')));
+ [[0,77,1],[1,81,1],[2,84,2],[4,82,1],[5,81,1],[6,79,2],[8,81,1],[9,79,1],[10,77,2],[12,79,1],[13,77,1],[14,77,2]].forEach(a=>{e.push(N(a[0],a[1],a[2],.45,'lead'));e.push(N(a[0]+.5,a[1]+12,1,.16,'box'));});
+ MUSIC.ending={bpm:66,beats:16,events:e};
+ Object.values(MUSIC).forEach(tr=>tr.events.sort((a,b)=>a.b-b.b));
+})();
+const ME={ctx:null,master:null,cur:null,evtIdx:0,loopStart:0,timer:null,muted:false,
+ init(){if(this.ctx)return;const C=window.AudioContext||window.webkitAudioContext;this.ctx=new C();this.master=this.ctx.createGain();this.master.gain.value=.55;this.master.connect(this.ctx.destination);
+  const len=this.ctx.sampleRate*.3,buf=this.ctx.createBuffer(1,len,this.ctx.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=Math.random()*2-1;this.noise=buf;},
+ play(id){this.init();if(this.ctx.state==='suspended')this.ctx.resume();this.cur=MUSIC[id];this.evtIdx=0;this.loopStart=this.ctx.currentTime+.08;
+  if(!this.timer)this.timer=setInterval(()=>this.tick(),40);},
+ stop(){this.cur=null;},
+ setMute(m){this.muted=m;if(this.master)this.master.gain.value=m?0:.55;},
+ tick(){if(!this.cur||!this.ctx)return;const tr=this.cur,spb=60/tr.bpm,loopDur=tr.beats*spb;
+  for(let guard=0;guard<64;guard++){
+   if(this.evtIdx>=tr.events.length){this.loopStart+=loopDur;this.evtIdx=0;}
+   const ev=tr.events[this.evtIdx],t=this.loopStart+ev.b*spb;
+   if(t>this.ctx.currentTime+.22)break;
+   this.voice(ev,Math.max(t,this.ctx.currentTime),spb);
+   this.evtIdx++;
+  }},
+ f(m){return 440*Math.pow(2,(m-69)/12);},
+ voice(ev,t,spb){if(this.muted)return;const c=this.ctx,d=ev.d*spb;
+  if(ev.i==='box'){const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=this.f(ev.m);
+   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(ev.v*.5,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+1.4);
+   o.connect(g);g.connect(this.master);o.start(t);o.stop(t+1.5);
+   const o2=c.createOscillator(),g2=c.createGain();o2.type='sine';o2.frequency.value=this.f(ev.m)*2;
+   g2.gain.setValueAtTime(0,t);g2.gain.linearRampToValueAtTime(ev.v*.12,t+.008);g2.gain.exponentialRampToValueAtTime(.0001,t+.8);
+   o2.connect(g2);g2.connect(this.master);o2.start(t);o2.stop(t+.9);return;}
+  if(ev.i==='lead'){const o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.value=this.f(ev.m);
+   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(ev.v,t+.02);g.gain.setValueAtTime(ev.v,t+Math.max(.05,d*.7));g.gain.exponentialRampToValueAtTime(.0001,t+d+.15);
+   o.connect(g);g.connect(this.master);o.start(t);o.stop(t+d+.25);return;}
+  if(ev.i==='bass'){const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=this.f(ev.m);
+   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(ev.v*.55,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d+.1);
+   o.connect(g);g.connect(this.master);o.start(t);o.stop(t+d+.2);return;}
+  if(ev.i==='pad'){ev.m.forEach(m=>{const o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.value=this.f(m);o.detune.value=(Math.random()*8-4);
+   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(ev.v,t+.5);g.gain.setValueAtTime(ev.v,t+d-.3);g.gain.linearRampToValueAtTime(0,t+d+.4);
+   o.connect(g);g.connect(this.master);o.start(t);o.stop(t+d+.6);});return;}
+  if(ev.i==='hat'){const s=c.createBufferSource(),g=c.createGain(),fl=c.createBiquadFilter();s.buffer=this.noise;fl.type='highpass';fl.frequency.value=6500;
+   g.gain.setValueAtTime(ev.v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.05);
+   s.connect(fl);fl.connect(g);g.connect(this.master);s.start(t);s.stop(t+.06);return;}
+  if(ev.i==='kick'){const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(120,t);o.frequency.exponentialRampToValueAtTime(45,t+.12);
+   g.gain.setValueAtTime(ev.v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.16);
+   o.connect(g);g.connect(this.master);o.start(t);o.stop(t+.2);return;}
+ }
+};
+function sfx(kind){if(!ME.ctx||ME.muted)return;const c=ME.ctx,t=c.currentTime,o=c.createOscillator(),g=c.createGain();
+ if(kind==='click'){o.type='square';o.frequency.value=880;g.gain.setValueAtTime(.06,t);g.gain.exponentialRampToValueAtTime(.0001,t+.06);}
+ else{o.type='sine';o.frequency.value=1320;g.gain.setValueAtTime(.09,t);g.gain.exponentialRampToValueAtTime(.0001,t+.12);}
+ o.connect(g);g.connect(ME.master);o.start(t);o.stop(t+.15);}
+/* ================= 劇本 ================= */
+const SCRIPT=[
+{t:'music',v:'title'},
+{t:'bg',v:'office',dim:true},
+{t:'chap',v:'序章｜粉紅色的日誌'},
+{t:'narr',x:'這場疫情越來越嚴重。已經損失一個億的某家公司高層決定縮編人力，沒被資遣的員工也通通改成在家上班。'},
+{t:'narr',x:'整間辦公室下個月就要退租了——看看可不可以再減少一點成本。'},
+{t:'narr',x:'不然，老闆接下來就要賤價出售他的心愛跑車了。傷不起啊。'},
+{t:'narr',x:'今天，老闆與房東約好要點交辦公室裡所有的設施，順便請清潔公司打掃一番。'},
+{t:'narr',x:'我想這年頭活得最滋潤的人大概就是房東了。不管經濟好或不好，租金永遠得付。'},
+{t:'narr',x:'收不到租金的話至少還有房子當資產。要是房客自殺呢？不用擔心，凶宅在這市場上越來越搶手。'},
+{t:'narr',x:'一個窮的人會害怕被鬼抓走嗎？鬼看到他閃掉都來不及了。'},
+{t:'narr',x:'臺灣的上班族是最血汗的一群。他們一天工作超過八小時，可是連凶宅都買不起。'},
+{t:'narr',x:'那些出沒辦公大樓、香噴噴的時尚OL，回家卸完妝的臉比自殺的房客還要恐怖。'},
+{t:'narr',x:'因為每間辦公室、每天總是上演各齣不同的宮鬥劇、鬼故事。'},
+{t:'show',id:'cleaner',pos:'center'},
+{t:'say',w:'cleaner',x:'（咦？抽屜裡……一本粉紅色的日誌本。）'},
+{t:'say',w:'cleaner',x:'從精美的紙膠帶、可愛的手工貼紙判斷，這本日誌應該是一名正妹OL所有的。'},
+{t:'say',w:'cleaner',x:'略微翻了下，只有寫到五月份而已。帶回家慢慢欣賞，應該不影響今天的工作進度吧？'},
+{t:'say',w:'cleaner',x:'……那麼，不好意思啦，我借走囉。'},
+{t:'hide',id:'cleaner'},
+{t:'narr',x:'以下內容，便是白領的心路歷程。她偷偷地把日子，寫成了一齣喜劇。'},
+{t:'card',a:'五月一日',b:'如果可以，我不想上班'},
+{t:'chap',v:'五月一日｜如果可以，我不想上班'},
+{t:'bg',v:'office'},
+{t:'music',v:'office'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'say',w:'xiaolin',x:'天氣晴。今天是勞動節，但我這個菜鳥白領卻沒辦法休假。'},
+{t:'say',w:'xiaolin',x:'只能坐在辦公室處理前輩交代的案子。呿！'},
+{t:'say',w:'xiaolin',x:'明知道現在臺灣疫情越來越嚴重，這個活動有極大可能會取消了，為什麼還堅持做下去呢？'},
+{t:'say',w:'xiaolin',x:'還是……已經預料到根本不會有太多人參與？'},
+{t:'say',w:'xiaolin',x:'根據衛福部發下的通知來看，室內聚會不能超過五個人。我簡單數了數：我、前輩、Boss、作家……'},
+{t:'say',w:'xiaolin',x:'等等，所以參加的讀者只會有一個人嗎？！'},
+{t:'choice',opts:[
+ {txt:'鼓起勇氣，在群組裡提醒前輩延期停辦',heart:1,goto:'c1a'},
+ {txt:'算了算了，靜觀其變就好',heart:0,goto:'c1b'}]},
+{t:'label',v:'c1a'},
+{t:'say',w:'xiaolin',x:'（傳個訊息，順便提醒一下好了……）'},
+{t:'say',w:'xiaolin',x:'「前輩～疫情越來越嚴重了，這次的活動是不是先延期比較好？」'},
+{t:'narr',x:'三分鐘後，群組裡跳出了前輩的回覆。'},
+{t:'narr',x:'前輩：「放心，Boss有安排。妳照做就對了。」'},
+{t:'say',w:'xiaolin_w',x:'嗚……果然不該說的。（冷汗）'},
+{t:'goto',v:'c1m'},
+{t:'label',v:'c1b'},
+{t:'say',w:'xiaolin',x:'還是算了……Boss並不是一個通情達理的暖男。'},
+{t:'say',w:'xiaolin',x:'我要是提了，八成只會被訓話一頓。'},
+{t:'goto',v:'c1m'},
+{t:'label',v:'c1m'},
+{t:'show',id:'boss',pos:'right'},
+{t:'say',w:'boss',x:'記住！沒有做不到的事情，只有沒想到的辦法！'},
+{t:'say',w:'xiaolin_w',x:'是、是……（感覺我的口罩要被冷汗濕透了。）'},
+{t:'say',w:'xiaolin_w',x:'如果可以，我不想上班啊！'},
+{t:'hide',id:'boss'},
+{t:'hide',id:'xiaolin_w'},
+{t:'card',a:'五月三日',b:'相看兩討厭'},
+{t:'chap',v:'五月三日｜相看兩討厭'},
+{t:'bg',v:'office'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'narr',x:'天氣陰。可喜可賀，作家主動傳訊息給我，他決定取消活動了！'},
+{t:'say',w:'xiaolin',x:'不過他也決定要回到山裡躲避疫情，打算整個五月份都不到市區去了。'},
+{t:'say',w:'xiaolin',x:'後面的稿件會用電郵的方式寄給我。看樣子蠻輕鬆的？'},
+{t:'say',w:'xiaolin',x:'可是這位作家並不是自動自發型的。'},
+{t:'narr',x:'記得上個月他莫名其妙失蹤了快一星期。'},
+{t:'narr',x:'整間辦公室的人（包括那個肥Boss）動用所有的人脈搜索，最後好不容易在平溪線某個小村落找到他。'},
+{t:'bg',v:'mountain'},
+{t:'show',id:'writer',pos:'center'},
+{t:'narr',x:'「你到底是怎樣啊？」我一邊拿起吸油面紙擦汗，一邊問。'},
+{t:'say',w:'writer',x:'我受不了了。女朋友過年後就一直待在家裡跟我大眼瞪小眼，什麼事都看我不順眼。'},
+{t:'say',w:'writer',x:'大至房間內的擺設，小至擠牙膏的方法，都要指導我。'},
+{t:'narr',x:'作家將口罩拉到下巴處散熱。'},
+{t:'say',w:'writer',x:'遠距離戀愛的時候，總想兩人天天都能見面該多好；現在如願以償了——她沒辦法回英國繼續完成學業，只好把我當作學業了。'},
+{t:'narr',x:'我示意讓他把口罩拉回去。'},
+{t:'bg',v:'office'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'say',w:'xiaolin',x:'其實每個家的情況都差不多啦。三嬸嬸昨天也跟我媽視訊了很久，全程都是在抱怨自己的老公有多糟糕。'},
+{t:'say',w:'xiaolin',x:'自從印度疫情讓工廠暫時歇業後，三叔整天就躺在家裡什麼事都不幹。'},
+{t:'say',w:'xiaolin',x:'如果三叔的樣子跟貓咪一樣可愛，不管他是用怎樣的姿勢躺，相信三嬸嬸都不會生氣。'},
+{t:'say',w:'xiaolin',x:'正所謂「相看兩討厭」，希望老爸老媽不會步入他們的後塵。'},
+{t:'card',a:'五月四日',b:'雜亂的辦公桌'},
+{t:'chap',v:'五月四日｜雜亂的辦公桌'},
+{t:'bg',v:'office'},
+{t:'show',id:'boss',pos:'right'},
+{t:'show',id:'chen',pos:'left'},
+{t:'narr',x:'天氣晴。今天晨會Boss宣布辦公室今晚要大消毒，要大家把自己的辦公桌收拾乾淨。'},
+{t:'say',w:'boss',x:'特別是陳責編！你的桌子實在太亂了，我看不出來你是坐在哪裡工作欸。'},
+{t:'narr',x:'只見小陳順手將桌上的稿件、文宣、企畫書往左邊一推——不偏不倚推出了一個空間。'},
+{t:'say',w:'chen',x:'我就坐在這裡啊。'},
+{t:'say',w:'chen',x:'Boss，我跟您說個愛因斯坦的故事。'},
+{t:'say',w:'chen',x:'如果一張凌亂的書桌是一個凌亂心智的象徵，那一張空白的桌面又象徵怎麼樣的心智呢？'},
+{t:'narr',x:'整個辦公室笑成一片。不愧是工作效率最高的小陳，好樣的。'},
+{t:'hide',id:'boss'},
+{t:'hide',id:'chen'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'say',w:'xiaolin',x:'我的辦公桌確實很整齊沒錯。'},
+{t:'say',w:'xiaolin',x:'但Boss並不知道，我上班的八小時中，至少有兩個小時是在整理自己的辦公桌。'},
+{t:'card',a:'五月八日',b:'印章男孩'},
+{t:'chap',v:'五月八日｜印章男孩'},
+{t:'bg',v:'office'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'say',w:'xiaolin',x:'天氣晴。公司開始第一波的資遣了。'},
+{t:'narr',x:'被資遣後的第一步就是要將健保轉出去。現在都用網路申報系統了，很容易。'},
+{t:'narr',x:'但轉入區公所時還是得交轉出表的紙本。當然啦，紙本文件上要有負責人、會計、公司的印章才能算數。'},
+{t:'say',w:'xiaolin',x:'但是，全公司所有的印章都在印章男孩的手中。'},
+{t:'show',id:'stamp',pos:'right'},
+{t:'narr',x:'他基本上只有一、三、五才會進公司。就算沒有這場疫情也是「分流上班」，因此很多事情都是壓在最後一刻才搞定。'},
+{t:'narr',x:'收發室的楊阿姨很可憐。她畢業一年多的兒子健保已經拖了快兩個禮拜，現在還沒辦法轉到區公所去。'},
+{t:'narr',x:'所以她命令兒子這段時間沒事就待在家裡打電動。「要是生病就慘了！」'},
+{t:'say',w:'xiaolin',x:'我今天下午特意傳訊息給印章男孩，希望他多多幫忙。'},
+{t:'narr',x:'五分鐘後，他回覆了。'},
+{t:'narr',x:'「姐，不好意思，我下班囉！星期一我再來蓋章！（笑臉）」'},
+{t:'say',w:'xiaolin',x:'難道，Boss對他一點意見都沒有嗎？'},
+{t:'narr',x:'據說——印章男孩的後臺非常硬。'},
+{t:'choice',opts:[
+ {txt:'鼓起勇氣向Boss反映',heart:-1,goto:'c8a'},
+ {txt:'算了，明哲保身要緊',heart:1,goto:'c8b'}]},
+{t:'label',v:'c8a'},
+{t:'show',id:'boss',pos:'left'},
+{t:'say',w:'boss',x:'嗯？印章男孩？他家裡關係複雜，妳別去煩他。'},
+{t:'say',w:'xiaolin_w',x:'（原來如此……是這樣啊。）'},
+{t:'hide',id:'boss'},
+{t:'goto',v:'c8m'},
+{t:'label',v:'c8b'},
+{t:'say',w:'xiaolin',x:'算了……這年頭，有後臺的人最好當。'},
+{t:'say',w:'xiaolin',x:'他的部份，我自己想辦法蓋吧。'},
+{t:'goto',v:'c8m'},
+{t:'label',v:'c8m'},
+{t:'narr',x:'「喀噠、喀噠」——印章的聲音，也是辦公室今天的節奏。'},
+{t:'hide',id:'stamp'},
+{t:'card',a:'五月十日',b:'我的前同事是瘋狂粉絲'},
+{t:'chap',v:'五月十日｜我的前同事是瘋狂粉絲'},
+{t:'bg',v:'office'},
+{t:'music',v:'tense'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'narr',x:'天氣晴。記得清明連假前，我曾在臉書上寫了一篇長文抒發心情，藉此整理自己工作以來的點點滴滴。'},
+{t:'narr',x:'與家人出遊歸家後，打開臉書的陌生訊息欄一看，發現有位無名氏網友對我大感不滿。'},
+{t:'say',w:'xiaolin',x:'當時我默默刪掉了訊息，一心只準備收心上工。'},
+{t:'show',id:'missA',pos:'left'},
+{t:'narr',x:'沒想到，溫柔的總務A小姐突然性情大變。'},
+{t:'say',w:'missA',x:'別以為你學歷好、主管對你好，就可以這麼囂張！'},
+{t:'say',w:'xiaolin_w',x:'頓時，我恍然大悟：啊，原來那位無名氏是她！'},
+{t:'say',w:'xiaolin',x:'於是向A小姐鄭重道歉，說明我並沒有針對任何人。'},
+{t:'narr',x:'事情沒有就此結束。A小姐對我更加變本加厲，從一開始的態度不佳，到工作上不斷的橫施壓力、加以阻擾……'},
+{t:'say',w:'xiaolin',x:'最後，我只好選擇申請調離單位。'},
+{t:'bg',v:'cafe'},
+{t:'show',id:'wu',pos:'right'},
+{t:'narr',x:'好心的吳企編趁公差外出時，邀我跟A小姐到咖啡廳把事情說開。'},
+{t:'narr',x:'沒想到A小姐還沒坐下來，一疊厚厚的A4紙就甩到了吳企編面前。'},
+{t:'narr',x:'就像一隻驕傲的孔雀。'},
+{t:'say',w:'xiaolin_w',x:'我嘴裡的紅茶差點噴了出來……'},
+{t:'say',w:'xiaolin_w',x:'這疊紙是我加入臉書以來所有的紀錄：包含了貼文、網誌、圖片、打卡等等內容……'},
+{t:'say',w:'xiaolin_w',x:'簡直就是一個瘋狂粉絲在追星！'},
+{t:'say',w:'missA',x:'這個人有多惡毒、多愛講別人壞話，我今天一次說清楚！'},
+{t:'narr',x:'這場講和大會，就在我與吳企編的傻眼之下落幕了。'},
+{t:'bg',v:'office'},
+{t:'music',v:'office'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'narr',x:'今日進辦公室，發現A小姐的解雇公告。此時吳企編慢慢走了進來。'},
+{t:'say',w:'wu',x:'Boss不想讓A小姐發現他上星期在夜店跟辣妹有「人與人之間的連結」。在他老婆知道之前，先一步讓她走人了！'},
+{t:'bg',v:'nightclub'},
+{t:'show',id:'boss',pos:'center'},
+{t:'narr',x:'（上個星期的某個深夜，某間夜店——）'},
+{t:'narr',x:'Boss與辣妹的「人與人之間的連結」，在閃爍的霓虹燈下，悄悄被誰拍了下來……'},
+{t:'bg',v:'office'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'say',w:'xiaolin',x:'！！辦公室的世界，真的是宮鬥劇、鬼故事天天上演。'},
+{t:'heart',d:1},
+{t:'card',a:'五月十二日',b:'聚餐不用付錢的幾個花招'},
+{t:'chap',v:'五月十二日｜聚餐不用付錢的幾個花招'},
+{t:'bg',v:'office'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'narr',x:'天氣晴。同事聚餐是本公司的優良傳統，每個月薪水不免有一部分貢獻給大大小小的餐廳。'},
+{t:'say',w:'xiaolin',x:'精打細算的紀伯伯，曾在私底下傳授我幾個聚餐不用付錢的花招。我覺得其中幾招很有意思，特別抄了下來。'},
+{t:'bg',v:'restaurant'},
+{t:'show',id:'ji',pos:'center'},
+{t:'narr',x:'（記憶中，某個熱氣騰騰的聚餐之夜——）'},
+{t:'say',w:'ji',x:'小林啊，聚餐不想付錢，伯伯傳授妳三招。'},
+{t:'say',w:'ji',x:'第一招：被後輩纏住要妳請客的時候，保持自然的表情，偷偷約比自己階層高的前輩出來。'},
+{t:'show',id:'junior',pos:'left'},
+{t:'say',w:'junior',x:'紀伯伯～今天發薪水了吧？請客請客！'},
+{t:'say',w:'ji',x:'哎呀，今晚月色真美……我突然想起，好久沒跟陳協理吃飯了！（掏出手機）'},
+{t:'narr',x:'一個不行就約下一個。只要前輩願意出來，有很大的機率他會幫大家付帳。'},
+{t:'show',id:'seniorF',pos:'right'},
+{t:'say',w:'seniorF',x:'呵呵，大家都在啊？今晚這頓算我的，想吃什麼別客氣。'},
+{t:'narr',x:'像Boss就是很喜歡裝大方的人。前輩一出手，全桌歡呼。'},
+{t:'say',w:'ji',x:'第二招：跟同事吃飯不確定誰買單的時候，抓住機會推給在座的某個人——故意講他最近的好事，讓他買單。'},
+{t:'say',w:'ji',x:'相反的，千萬不能說自己的好事！特別在喝酒的時候，這個行為就如同引火自焚，一發不可收拾。'},
+{t:'say',w:'junior',x:'那第三招呢？第三招呢？'},
+{t:'say',w:'ji',x:'快吃完了卻沒人買單——就施出「維持社交距離法」！'},
+{t:'say',w:'ji',x:'以櫃檯為中心點，保持最遠的社交距離：綁鞋帶、上廁所、看手機，跟旁邊的人聊些無關緊要的事……自然就會有人跑去結帳了。'},
+{t:'say',w:'ji',x:'不過這招很容易被人看穿，還是少用為妙。'},
+{t:'hide',id:'seniorF'},
+{t:'hide',id:'ji'},
+{t:'hide',id:'junior'},
+{t:'bg',v:'office'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'say',w:'xiaolin',x:'我寫到這裡忍不住想，紀伯伯是不是也有看「順風婦產科」？他的行為跟朴英奎真的好像啊！'},
+{t:'narr',x:'不過現在的年輕白領都是AA制，各付各的了。而且很多娛樂場所都關閉了，餐廳也紛紛改成了外帶或外送制，聚餐的機會是越來越少了。'},
+{t:'say',w:'xiaolin',x:'看來「視訊聚餐」這招比較高明——晚上我要讓大家隔空欣賞我的廚藝！'},
+{t:'choice',opts:[
+ {txt:'辦「視訊聚餐」，隔空展示我的廚藝',heart:1,goto:'c12a'},
+ {txt:'揪大家點外送，乖乖AA制',heart:0,goto:'c12b'},
+ {txt:'實戰「社交距離法」（笑）',heart:-1,goto:'c12c'}]},
+{t:'label',v:'c12a'},
+{t:'bg',v:'party'},
+{t:'show',id:'xiaolin_h',pos:'center'},
+{t:'narr',x:'到了晚上，視訊聚餐準時開播。'},
+{t:'say',w:'xiaolin_h',x:'各位～今晚隔空欣賞我的廚藝！'},
+{t:'say',w:'xiaolin_h',x:'留言區一片「🤤」「下次請我！」——大成功！'},
+{t:'bg',v:'office'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'goto',v:'c12m'},
+{t:'label',v:'c12b'},
+{t:'bg',v:'party'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'say',w:'xiaolin',x:'果然年輕人的AA制最和平了。外送到齊——'},
+{t:'say',w:'xiaolin',x:'大家對著鏡頭舉杯喊「乾杯」，意外地熱鬧呢。'},
+{t:'bg',v:'office'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'goto',v:'c12m'},
+{t:'label',v:'c12c'},
+{t:'bg',v:'office'},
+{t:'show',id:'xiaolin_w',pos:'center'},
+{t:'say',w:'xiaolin_w',x:'結果大家一秒看穿，最後還是各付各的。'},
+{t:'say',w:'xiaolin_w',x:'社交距離法，失敗收場……（白煙）'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'goto',v:'c12m'},
+{t:'label',v:'c12m'},
+{t:'narr',x:'聚餐的形式隨時代改變，但那份吵吵鬧鬧的溫度，好像還是一樣的。'},
+{t:'card',a:'五月十六日',b:'嫦娥與麻花捲'},
+{t:'chap',v:'五月十六日｜嫦娥與麻花捲'},
+{t:'bg',v:'yoga'},
+{t:'show',id:'xiaolin_h',pos:'center'},
+{t:'narr',x:'天氣晴。聽說OL最近流行在辦公室做瑜珈。適當的運動可以增強自身的免疫力，這是沒錯的。'},
+{t:'narr',x:'但本公司的Boss並沒有那麼佛心。他認為上班的地方就只能拿來上班。'},
+{t:'say',w:'xiaolin_h',x:'我只好利用放假的時間尋找相關的活動。最近社區新開了一間健身房，主打課程是「空中瑜珈」。'},
+{t:'say',w:'xiaolin_h',x:'宣傳單上的圖片是一群身材曼妙的女孩們在布條上做出輕盈舒展的肢體動作，看起來就像嫦娥奔月般美麗。'},
+{t:'say',w:'xiaolin_h',x:'據說空中瑜珈還有改善內分泌、去水腫的功效。這對我來說實在太誘人了！所以馬上報名了假日試聽課。'},
+{t:'show',id:'xiaolin_w',pos:'center'},
+{t:'narr',x:'但實際接觸後，才發現並沒有那麼輕鬆容易。'},
+{t:'say',w:'xiaolin_w',x:'「倒掛金勾」的時候，有懼高症的我非常害怕，總擔心布條會不會突然斷掉？'},
+{t:'say',w:'xiaolin_w',x:'練習「蠍子式」時又不小心跟布條糾纏成一塊，還得仰賴教練跟乾姊姊救我突圍。'},
+{t:'show',id:'sis',pos:'right'},
+{t:'say',w:'xiaolin_w',x:'我非但扮不成嫦娥，還變成了麻花捲。課程結束後只感到兩隻手臂虛軟無力，小腿上還出現了黑青。'},
+{t:'say',w:'sis',x:'（笑）妳這核心肌力實在是太弱了，不如先好好鍛練核心肌群再說吧。'},
+{t:'hide',id:'sis'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'say',w:'xiaolin',x:'看來這種技術活不太適合我，我還是從最基礎的健身課程開始努力吧。'},
+{t:'narr',x:'下午衛福部召開了防疫記者會，要求所有的娛樂場所必須關閉。'},
+{t:'say',w:'xiaolin',x:'看來我只能利用YOTUBE頻道了。'},
+{t:'say',w:'xiaolin',x:'……對，是「YOTUBE」，不是筆誤。（笑）'},
+{t:'card',a:'五月十八日',b:'皇太后脫線記'},
+{t:'chap',v:'五月十八日｜皇太后脫線記'},
+{t:'bg',v:'office'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'narr',x:'天氣晴。公司太子爺就讀美國大學三年級。某日，他打電話跟老媽說自己腹瀉了好幾天，不知道是不是中鏢了。'},
+{t:'narr',x:'念子情切的皇太后即刻訂好六月的機票，用多地轉機的方式飛往美國探視。然後突然才發現——她的護照到期了！'},
+{t:'narr',x:'急急忙忙地跳上計程車去外交部補辦護照。'},
+{t:'show',id:'secretary',pos:'right'},
+{t:'narr',x:'此時，小秘書覺得不對：去年暑假母子倆不是才去了一趟日本？'},
+{t:'narr',x:'重新翻了下櫃子，護照明明還有七、八年才到期啊？'},
+{t:'narr',x:'果不其然，皇太后是拿到舊護照了！'},
+{t:'narr',x:'這時電話聲響起。皇太后問：辦公室裡是不是還有護照？'},
+{t:'bg',v:'mofa'},
+{t:'show',id:'dowager',pos:'center'},
+{t:'narr',x:'原來，外交部的承辦員體恤皇太后的心情，以特殊理由幫她辦「最急件」，幾個小時後就能拿到護照。'},
+{t:'narr',x:'而在行政流程中，查到皇太后的護照還有一本，而且還很新，便好意提醒她是不是被盜用個資了？'},
+{t:'say',w:'dowager',x:'哎呀呀！那本新的也是我本人！舊的忘記銷毀了啦！'},
+{t:'bg',v:'office'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'show',id:'secretary',pos:'right'},
+{t:'narr',x:'誰都沒有發現，小秘書陰險的微笑。'},
+{t:'say',w:'secretary',x:'（微笑）皇太后，祝您一路順風囉～'},
+{t:'narr',x:'她沒有提醒皇太后要有陰性篩檢證明才能出國。'},
+{t:'narr',x:'現在全臺各縣爆發了群聚感染，當然也沒人有空幫皇太后做篩檢了。'},
+{t:'bg',v:'airport'},
+{t:'show',id:'dowager',pos:'center'},
+{t:'narr',x:'幾天後，皇太后拖著行李，踏上了多地轉機的探子之旅——'},
+{t:'say',w:'dowager',x:'太子爺！媽媽來了！'},
+{t:'bg',v:'office'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'say',w:'xiaolin',x:'辦公室的宮鬥劇，從來不會讓人失望。'},
+{t:'card',a:'五月二十日',b:'最後的WFH'},
+{t:'chap',v:'五月二十日｜最後的WFH'},
+{t:'bg',v:'home'},
+{t:'music',v:'title'},
+{t:'show',id:'xiaolin',pos:'center'},
+{t:'narr',x:'天氣晴。今天病例333。'},
+{t:'narr',x:'公司群組下達「在家工作」的指令。'},
+{t:'say',w:'xiaolin',x:'看樣子我今晚下班該去超市補充物資了。'},
+{t:'bg',v:'supermarket'},
+{t:'show',id:'xiaolin_h',pos:'center'},
+{t:'narr',x:'傍晚的超市比平常熱鬧。泡麵、罐頭、衛生紙，一袋一袋地被抱進購物車裡。'},
+{t:'say',w:'xiaolin_h',x:'補貨！補貨！WFH戰士的物資補給！'},
+{t:'bg',v:'home'},
+{t:'show',id:'xiaolin_h',pos:'center'},
+{t:'say',w:'xiaolin_h',x:'從明天開始，我可以一邊敷面膜、一邊縮小臉、一邊工作了！'},
+{t:'say',w:'xiaolin_h',x:'也不用化妝、穿那討厭的尖頭鞋了！'},
+{t:'show',id:'xiaolin_w',pos:'center'},
+{t:'say',w:'xiaolin_w',x:'……可是我實在害怕。'},
+{t:'say',w:'xiaolin_w',x:'不知道下一波失業潮，會不會打在我的身上？'},
+{t:'narr',x:'日誌，就在這裡畫下了一串長長的星號。'},
+{t:'narr',x:'像有人輕輕地，按下了暫停鍵。'},
+{t:'card',a:'終章',b:'空白的城市'},
+{t:'chap',v:'終章｜空白的城市'},
+{t:'bg',v:'city'},
+{t:'music',v:'ending'},
+{t:'show',id:'cleaner',pos:'center'},
+{t:'narr',x:'清潔小弟闔上日誌本後，心中也不禁浮現出同樣的疑問。'},
+{t:'narr',x:'這場疫情已經燒了一年多了，所有人的生活都遇到了關鍵性的轉變。'},
+{t:'narr',x:'這本日誌的主人文筆看起來非常幽默，卻隱藏不了對往後生活的煩惱與擔憂。'},
+{t:'say',w:'cleaner',x:'我在五月前也只是一個剛畢業、還沒找到工作的社會菜鳥。'},
+{t:'say',w:'cleaner',x:'拜這場疫情所賜，馬上就找到了消毒人員的約聘職。命運啊，真是有意思。'},
+{t:'say',w:'cleaner',x:'……嘿，OL姊姊。妳現在過得好嗎？'},
+{t:'say',w:'cleaner',x:'希望妳在某個地方，好好的生活著。'},
+{t:'narr',x:'他看著五光十色的臺北市，一夜之間變得空白。'},
+{t:'narr',x:'跟他身上的防護衣一樣。'},
+{t:'end'}
+];
+const LABELS={};SCRIPT.forEach((s,i)=>{if(s.t==='label')LABELS[s.v]=i;});
+/* ================= 引擎 ================= */
+const $=id=>document.getElementById(id);
+const stage=$('stage'),bgEls=[$('bgA'),$('bgB')];let bgCur=0,bgDimNow=false;
+const charsEl=$('chars'),dialog=$('dialog'),nameplate=$('nameplate'),textEl=$('text'),nextind=$('nextind');
+let idx=0,heart=3,waiting=false,typing=false,typeTimer=null,fullText='',chapNow='序章';
+let skipMode=false,autoMode=false,autoTimer=null,resolveWait=null,choiceResolve=null,running=false;
+let charDivs={},charShown={},charTimers={};
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);stage.style.transform='translate(-50%,-50%) scale('+s+')';}
+addEventListener('resize',fit);fit();
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function setBG(v,dim){
+ const nxt=bgEls[1-bgCur],cur=bgEls[bgCur];
+ nxt.src=BG[v];nxt.classList.toggle('dim',!!dim);
+ nxt.onload=()=>{nxt.classList.add('on');cur.classList.remove('on');};
+ if(nxt.complete){nxt.classList.add('on');cur.classList.remove('on');}
+ bgCur=1-bgCur;bgDimNow=!!dim;
+}
+function clearAllChars(){Object.keys(charShown).slice().forEach(id=>hideChar(id));}
+function showChar(id,pos){
+ const g=groupOf(id),src=SPRITE_DATA[id]||SPR[id];
+ if(charTimers[g]){clearTimeout(charTimers[g]);delete charTimers[g];}
+ Object.keys(charShown).forEach(k=>{if(charShown[k]===g&&k!==id)delete charShown[k];});
+ charShown[id]=g;
+ let d=charDivs[g];
+ if(!d){
+  d=document.createElement('div');d.className='char';d.style.left=POS[pos];
+  const im=new Image();im.src=src;im.className='cur';im.setAttribute('data-src',src);
+  im.style.opacity=0;im.style.transition='opacity .3s ease';
+  d.appendChild(im);charsEl.appendChild(d);charDivs[g]=d;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{d.classList.add('in');im.style.opacity=1;}));
+  return;
+ }
+ d.style.left=POS[pos];
+ d.classList.remove('out');d.classList.add('in');
+ const curImg=d.querySelector('img.cur');
+ if(curImg&&curImg.getAttribute('data-src')===src){curImg.style.opacity=1;return;}
+ const im=new Image();im.src=src;im.className='cur';im.setAttribute('data-src',src);
+ im.style.opacity=0;im.style.transition='opacity .3s ease';
+ d.appendChild(im);
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  im.style.opacity=1;
+  d.querySelectorAll('img').forEach(o=>{
+   if(o!==im){o.classList.remove('cur');o.style.opacity=0;setTimeout(()=>o.remove(),320);}
+  });
+ }));
+}
+function hideChar(id){
+ const g=groupOf(id);
+ Object.keys(charShown).forEach(k=>{if(charShown[k]===g)delete charShown[k];});
+ const d=charDivs[g];if(!d)return;
+ d.classList.remove('in');d.classList.add('out');
+ if(charTimers[g])clearTimeout(charTimers[g]);
+ charTimers[g]=setTimeout(()=>{d.remove();delete charDivs[g];delete charTimers[g];},380);
+}
+function clearChars(){clearAllChars();}
+function focusChar(id){
+ const sg=id?groupOf(id):null;
+ Object.keys(charShown).forEach(k=>{const d=charDivs[charShown[k]];if(d)d.classList.toggle('dimmed',!!sg&&charShown[k]!==sg);});
+}
+function updateHearts(){$('hearts').textContent='士氣 '+'♥'.repeat(Math.max(0,Math.min(9,heart)));}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800);}
+function pushLog(name,x){const d=document.createElement('div');d.className='logrow';d.innerHTML='<b>'+(name||'')+'</b>'+x;$('logList').appendChild(d);}
+async function showCard(s){
+ $('cardDate').textContent=s.a;$('cardSub').textContent=s.b;
+ const c=$('card');c.classList.remove('on');void c.offsetWidth;c.classList.add('on');
+ await sleep(2400);c.classList.remove('on');
+}
+function renderSay(s){
+ dialog.classList.add('on');
+ const isNarr=s.t==='narr';
+ if(isNarr){nameplate.classList.remove('on');textEl.className='narr';focusChar(null);}
+ else{const c=CH[s.w];nameplate.textContent=c.name;nameplate.style.background=c.color;nameplate.classList.add('on');textEl.className='';focusChar(s.w);}
+ fullText=s.x;textEl.textContent='';typing=true;nextind.classList.remove('on');
+ pushLog(isNarr?'':(CH[s.w]?CH[s.w].name:''),s.x);
+ let i=0;clearInterval(typeTimer);
+ const spd=skipMode?4:26;
+ typeTimer=setInterval(()=>{i++;textEl.textContent=fullText.slice(0,i);
+  if(i>=fullText.length){clearInterval(typeTimer);typing=false;nextind.classList.add('on');
+   if(autoMode)autoTimer=setTimeout(doAdvance,1300);
+   if(skipMode)autoTimer=setTimeout(doAdvance,120);}
+ },spd);
+}
+function finishTyping(){clearInterval(typeTimer);typing=false;textEl.textContent=fullText;nextind.classList.add('on');}
+function doAdvance(){clearTimeout(autoTimer);
+ if(typing){finishTyping();sfx('click');return;}
+ if(waiting&&resolveWait){const r=resolveWait;resolveWait=null;waiting=false;sfx('click');r();}
+}
+function showChoice(s){
+ dialog.classList.remove('on');
+ const box=$('choiceBox');box.innerHTML='';box.classList.add('on');
+ s.opts.forEach((o,i)=>{
+  const b=document.createElement('button');b.className='chopt';b.style.animationDelay=(i*.12)+'s';b.textContent=o.txt;
+  b.onmouseenter=()=>sfx('sel');
+  b.onclick=e=>{e.stopPropagation();sfx('sel');if(o.heart)heart+=o.heart;updateHearts();box.classList.remove('on');
+   const r=choiceResolve;choiceResolve=null;waiting=false;r(o);};
+  box.appendChild(b);
+ });
+ waiting=true;
+ return new Promise(r=>{choiceResolve=r;});
+}
+async function run(){
+ running=true;waiting=false;
+ while(idx<SCRIPT.length){
+  const s=SCRIPT[idx];
+  switch(s.t){
+   case 'bg':
+    clearAllChars();
+    setBG(s.v,s.dim);await sleep(260);break;
+   case 'music':ME.play(s.v);break;
+   case 'chap':chapNow=s.v;$('chaplabel').textContent=s.v;break;
+   case 'show':showChar(s.id,s.pos);await sleep(60);break;
+   case 'hide':hideChar(s.id);await sleep(60);break;
+   case 'heart':heart+=s.d;updateHearts();break;
+   case 'card':await showCard(s);break;
+   case 'goto':idx=LABELS[s.v];continue;
+   case 'label':break;
+   case 'say':case 'narr':{
+    renderSay(s);waiting=true;
+    await new Promise(r=>{resolveWait=r;});
+    break;}
+   case 'choice':{
+    const o=await showChoice(s);
+    idx=o.goto?LABELS[o.goto]:idx+1;continue;}
+   case 'end':idx++;showEnd();return;
+  }
+  idx++;
+ }
+}
+function showEnd(){
+ dialog.classList.remove('on');clearAllChars();
+ let tt,ln;
+ if(heart>=6){tt='【元氣滿滿的結局】';ln='即使世界空白，也要好好吃一頓飯、好好上班。';}
+ else if(heart>=4){tt='【平穩日常的結局】';ln='明天依然會來，就像租金一樣準時。';}
+ else{tt='【略帶煩惱的結局】';ln='擔憂還留在五月，但日誌已經合上了。';}
+ $('endTitle').textContent=tt;$('endLine').textContent=ln;
+ $('endHeart').textContent='白領士氣值：'+'♥'.repeat(Math.max(0,heart))+'（'+heart+'）';
+ $('end').classList.add('on');
+}
+/* ---------------- 存檔 ---------------- */
+function saveGame(){
+ const data={idx,heart,chap:chapNow,chars:Object.keys(charShown).map(k=>({id:k,pos:Object.keys(POS).find(p=>POS[p]===charDivs[charShown[k]].style.left)}))};
+ let curBg=null;Object.keys(BG).forEach(k=>{if(bgEls[bgCur].src===BG[k])curBg=k;});
+ data.bg=curBg;data.dim=bgDimNow;
+ localStorage.setItem('oldiary_save',JSON.stringify(data));toast('已儲存進度 ♥');
+}
+function loadGame(fromTitle){
+ const raw=localStorage.getItem('oldiary_save');if(!raw){toast('沒有存檔');return;}
+ const d=JSON.parse(raw);
+ $('title').style.display='none';$('end').classList.remove('on');$('hud').classList.add('on');
+ if(d.bg)setBG(d.bg,d.dim);
+ clearAllChars();(d.chars||[]).forEach(c=>showChar(c.id,c.pos));
+ heart=d.heart||3;updateHearts();chapNow=d.chap||'';$('chaplabel').textContent=chapNow;
+ idx=d.idx||0;running=false;run();
+ if(fromTitle)toast('已讀取進度');
+}
+/* ---------------- 輸入 ---------------- */
+stage.addEventListener('pointerdown',e=>{
+ if(e.target.closest('button')||$('choiceBox').classList.contains('on')||$('logModal').classList.contains('on'))return;
+ if($('title').style.display!=='none'&&$('title').offsetParent)return;
+ if($('end').classList.contains('on'))return;
+ if(!running)return;
+ doAdvance();
+});
+addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();doAdvance();}});
+$('bSkip').onclick=()=>{skipMode=!skipMode;$('bSkip').classList.toggle('act',skipMode);};
+$('bAuto').onclick=()=>{autoMode=!autoMode;$('bAuto').classList.toggle('act',autoMode);};
+$('bSave').onclick=saveGame;
+$('bLoad').onclick=()=>loadGame(false);
+$('bMus').onclick=()=>{ME.setMute(!ME.muted);$('bMus').classList.toggle('act',ME.muted);};
+$('bLog').onclick=()=>{$('logModal').classList.add('on');$('logList').scrollTop=$('logList').scrollHeight;};
+$('logClose').onclick=()=>$('logModal').classList.remove('on');
+$('bStart').onclick=()=>{ME.init();ME.play('title');$('title').style.display='none';$('hud').classList.add('on');heart=3;updateHearts();idx=0;run();};
+$('bLoad2').onclick=()=>{ME.init();loadGame(true);};
+$('bAgain').onclick=()=>{location.reload();};
+$('bTitle').onclick=()=>{location.reload();};
+/* ---------------- 載入資源 + 去背 ---------------- */
+const SPRITE_DATA={};
+(async function(){
+ const keys=Object.keys(BG).concat(Object.keys(SPR));
+ const prog=$('prog');
+ const imgs={};
+ let done=0;
+ await Promise.all(keys.map(k=>loadImg(BG[k]||SPR[k]).then(im=>{imgs[k]=im;done++;
+  prog.textContent='資源載入中… '+Math.round(done/keys.length*100)+'%';
+  if(k==='title')$('titleArt').src=im.src;
+ }).catch(()=>{done++;})));
+ const sprKeys=Object.keys(SPR);
+ for(let i=0;i<sprKeys.length;i++){
+  const k=sprKeys[i];
+  prog.textContent='立繪去背處理中… '+(i+1)+' / '+sprKeys.length;
+  const im=imgs[k];
+  if(im){const r=processSprite(im);SPRITE_DATA[k]=r||im.src;}
+  else SPRITE_DATA[k]=SPR[k];
+  await sleep(0);
+ }
+ prog.textContent='載入完成！';
+ $('bStart').classList.remove('dis');
+ if(localStorage.getItem('oldiary_save')){$('bLoad2').classList.remove('dis');$('loadinfo').textContent='偵測到存檔紀錄';}
+ aiUpgrade();
+})();
+document.addEventListener('pointerdown',()=>{ME.init();if(ME.ctx&&ME.ctx.state==='suspended')ME.ctx.resume();},{once:false});
+</script>
+</body>
+</html>
